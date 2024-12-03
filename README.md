@@ -29,7 +29,7 @@ The schema includes the following key fields:
 * Affected Versions: Versions or version ranges impacted by the issue.
 * References: External resources or documentation links.
 
-For a complete definition, refer to schema.json or <documentation>.
+For a complete definition, refer to schema.json or the documentation.
 
 # Contributing
 Contributions to the schema or examples are welcome! To contribute:
