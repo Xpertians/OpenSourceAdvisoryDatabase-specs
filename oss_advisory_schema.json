@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "OSS Advisory Schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the advisory."
+    },
+    "version": {
+      "type": "string",
+      "description": "Version of the package affected by the advisory."
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["Low", "Medium", "High", "Informational"],
+      "description": "Severity level of the issue."
+    },
+    "title": {
+      "type": "string",
+      "description": "Title summarizing the advisory."
+    },
+    "package_name": {
+      "type": "string",
+      "description": "Name of the affected package."
+    },
+    "publisher": {
+      "type": "string",
+      "description": "Publisher or maintainer of the package."
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of the last update to this advisory."
+    },
+    "approvals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "consumption": {
+            "type": "boolean",
+            "description": "Indicates if the package is approved for consumption."
+          },
+          "externalization": {
+            "type": "boolean",
+            "description": "Indicates if the package is approved for externalization."
+          }
+        },
+        "required": ["consumption", "externalization"]
+      },
+      "description": "Approval statuses for different package uses."
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the problem or advisory details."
+    },
+    "purls": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of Package URLs (PURLs) associated with the advisory."
+    },
+    "regex": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of regular expressions matching the affected packages."
+    },
+    "affected_versions": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of affected versions of the package."
+    },
+    "references": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Links to additional resources or references."
+    }
+  },
+  "required": ["id", "version", "severity", "title", "package_name", "description"]
+}

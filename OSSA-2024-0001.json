@@ -1,0 +1,31 @@
+{
+  "id": "OSSA-2024-0001",
+  "version": "4.4",
+  "severity": "High",
+  "title": "License and Patent Risks in FFmpeg",
+  "package_name": "ffmpeg",
+  "publisher": "Open Source Compliance Team <compliance@example.com>",
+  "last_updated": "2024-11-26T12:00:00Z",
+  "approvals": [
+    {
+      "consumption": true,
+      "externalization": false
+    }
+  ],
+  "description": "FFmpeg includes codecs and libraries that are known to be subject to patent claims, including H.264 and AAC. Additionally, it uses LGPL-2.1 and GPL-2.0 licenses, which may impose copyleft obligations if linked in certain ways. The dynamic vs static linking distinction can complicate compliance.",
+  "purls": [
+    "pkg:generic/ffmpeg@4.4",
+    "pkg:generic/ffmpeg@5.0"
+  ],
+  "regex": [
+    "^pkg:generic/ffmpeg@.*"
+  ],
+  "affected_versions": [
+    "4.0.0",
+    "5.0.0"
+  ],
+  "references": [
+    "https://ffmpeg.org/legal.html",
+    "https://www.ffmpeg.org/patents.html"
+  ]
+}
