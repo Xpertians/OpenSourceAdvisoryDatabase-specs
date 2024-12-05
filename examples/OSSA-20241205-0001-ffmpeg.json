@@ -25,8 +25,8 @@
     "5.0.0"
   ],
   "swhids": [
-    "swh:1:dir:4b8e7f8c5e2f4e3a5d6e7f8c9b0a1c2d3e4f5g6h",
-    "swh:1:rev:5c6d7e8f9a0b1c2d3e4f5g6h7i8j9k0l1m2n3o4p"
+    "swh:1:dir:4b8e7f8c5e2f4e3a5d6e7f8c9b0a1c2d3e4f5a6b",
+    "swh:1:rev:5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d"
   ],
   "fuzzy_hashes": [
     {
@@ -38,7 +38,7 @@
     {
       "url": "https://ffmpeg.org/releases/ffmpeg-4.4.tar.bz2",
       "hashes": {
-        "sha256": "06b10f1c2e3d4f5g6h7i8j9k0l1m2n3o4p5q6r7s8t9u0v1w2x3y4z5a6b7c8d9e"
+        "sha256": "06b10f1c2e3d4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f90"
       }
     }
   ],

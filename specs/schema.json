@@ -79,7 +79,7 @@
       "type": "array",
       "items": {
         "type": "string",
-        "pattern": "^swh:1:[a-z]+:[0-9a-f]{40}$",
+        "pattern": "^swh:1:[a-z]+:[0-9a-f]{40}(;[a-z]+=[^;]+)*$",
         "description": "Software Heritage Identifier (SWHID) associated with the package."
       },
       "description": "List of Software Heritage Identifiers related to the package."
