@@ -74,6 +74,63 @@
       "type": "array",
       "items": { "type": "string" },
       "description": "Links to additional resources or references."
+    },
+    "swhids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^swh:1:[a-z]+:[0-9a-f]{40}$",
+        "description": "Software Heritage Identifier (SWHID) associated with the package."
+      },
+      "description": "List of Software Heritage Identifiers related to the package."
+    },
+    "fuzzy_hashes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "algorithm": {
+            "type": "string",
+            "enum": ["ssdeep", "sdhash", "tlsh"],
+            "description": "Algorithm used to compute the fuzzy hash."
+          },
+          "hash": {
+            "type": "string",
+            "description": "The computed fuzzy hash value."
+          }
+        },
+        "required": ["algorithm", "hash"],
+        "description": "Fuzzy hash details including algorithm and hash value."
+      },
+      "description": "List of fuzzy hashes for the package, specifying the algorithm used."
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL to the authoritative download artifact."
+          },
+          "hashes": {
+            "type": "object",
+            "properties": {
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$",
+                "description": "SHA-256 hash of the artifact."
+              }
+            },
+            "required": ["sha256"],
+            "description": "Cryptographic hashes of the artifact."
+          }
+        },
+        "required": ["url", "hashes"],
+        "description": "Details of the authoritative download artifact, including URL and hashes."
+      },
+      "description": "List of authoritative download artifacts with their corresponding hashes."
     }
   },
   "required": ["id", "version", "severity", "title", "package_name", "description"]

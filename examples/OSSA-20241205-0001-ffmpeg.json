@@ -1,5 +1,5 @@
 {
-  "id": "OSSA-2024-0001",
+  "id": "OSSA-20241205-0001-ffmpeg",
   "version": "4.4",
   "severity": "High",
   "title": "License and Patent Risks in FFmpeg",
@@ -23,6 +23,24 @@
   "affected_versions": [
     "4.0.0",
     "5.0.0"
+  ],
+  "swhids": [
+    "swh:1:dir:4b8e7f8c5e2f4e3a5d6e7f8c9b0a1c2d3e4f5g6h",
+    "swh:1:rev:5c6d7e8f9a0b1c2d3e4f5g6h7i8j9k0l1m2n3o4p"
+  ],
+  "fuzzy_hashes": [
+    {
+      "algorithm": "ssdeep",
+      "hash": "3:hFO0:1hFO0"
+    }
+  ],
+  "artifacts": [
+    {
+      "url": "https://ffmpeg.org/releases/ffmpeg-4.4.tar.bz2",
+      "hashes": {
+        "sha256": "06b10f1c2e3d4f5g6h7i8j9k0l1m2n3o4p5q6r7s8t9u0v1w2x3y4z5a6b7c8d9e"
+      }
+    }
   ],
   "references": [
     "https://ffmpeg.org/legal.html",
