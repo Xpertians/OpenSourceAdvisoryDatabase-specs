@@ -116,7 +116,7 @@ def extract_urls_from_spec(spec_file_path):
 def generate_ossa_file(package, version, arch, output_dir):
     package_name = f"{package}-{version}-{arch}"
     ossa_id = f"OSSA-{datetime.datetime.now().strftime('%Y%m%d')}-{hash(package_name) % 10000}-{package}"
-    output_path = Path(output_dir) / f"{ossa_id}.json"
+    output_path = Path(output_dir) / f"{ossa_id.lower()}.json"
 
     source_path = get_source_package(package)
     if not source_path:
