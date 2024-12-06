@@ -18,9 +18,8 @@ def compute_sha1(file_path):
 
 def compute_swhid(file_path):
     sha1_hash = compute_sha1(file_path)
-    swhid = CoreSWHID.from_hash('cnt', sha1_hash)
-    return str(swhid)
-
+    swhid = f"swh:1:cnt:{sha1_hash}"
+    return swhid
 
 # Function to compute SHA-256 hash
 def compute_sha256(file_path):
