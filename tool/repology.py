@@ -42,13 +42,13 @@ def normalize_to_spdx(entry):
         "custom": "Custom",
     }
 
-    all_licenses = set()
-    licenses = [lic.strip() for lic in entry.split(",")]
-    for lic in licenses:
+    licenses = set()
+    # Split on both " and " and "," to handle different conjunctions
+    for lic in [lic.strip() for part in entry.split(" AND ") for lic in part.split(",")]:
         normalized = SPDX_LICENSE_MAP.get(lic, lic)
-        all_licenses.add(normalized)
+        licenses.add(normalized)
     
-    return sorted(all_licenses)
+    return licenses
 
 def find_package_info(rpm_package_name):
     url = f"https://repology.org/api/v1/project/{rpm_package_name}"
@@ -73,33 +73,30 @@ def find_package_info(rpm_package_name):
                     package_visiblename = repo.get('visiblename', rpm_package_name)
                     package_licenses = repo.get('licenses', ['unknown_license'])
 
-                    # Add aliases and licenses
+                    # Add aliases and normalized licenses
                     aliases.add(package_visiblename)
-                    licenses.update(package_licenses)
+                    for lic in package_licenses:
+                        licenses.update(normalize_to_spdx(lic))
 
-            return sorted(aliases), sorted(licenses)
+            return sorted(aliases), licenses
         except ValueError as e:
             print(f"Failed to parse JSON: {e}")
-            return [], []
+            return [], set()
     elif response.status_code == 403:
         print("Access denied. Make sure your IP is not blocked.")
-        return [], []
+        return [], set()
     else:
         print(f"Failed to fetch data: HTTP {response.status_code}")
-        return [], []
+        return [], set()
 
 # Example usage
-rpm_package = "ffmpeg"
+rpm_package = "libgcc"
 aliases, licenses = find_package_info(rpm_package)
 
 if aliases:
     print("Possible Aliases:")
-    for alias in aliases:
-        print(f"  - {alias}")
+    print(", ".join(sorted(aliases)))
 
 if licenses:
-    print("\nUnique Licenses Found:")
-    for license in licenses:
-        txt = license.replace(' and ', ', ').replace(' AND ', ', ')
-        txt = normalize_to_spdx(txt)
-        print(f"  - {txt}")
+    print("\nUnique SPDX Licenses:")
+    print(", ".join(sorted(licenses)))

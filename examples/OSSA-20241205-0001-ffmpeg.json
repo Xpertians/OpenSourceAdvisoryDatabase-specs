@@ -4,6 +4,11 @@
   "severity": "High",
   "title": "License and Patent Risks in FFmpeg",
   "package_name": "ffmpeg",
+  "aliases": [
+    "ffmpeg",
+    "libffmpeg",
+    "ffmpeg4"
+  ],
   "publisher": "Open Source Compliance Team <compliance@example.com>",
   "last_updated": "2024-11-26T12:00:00Z",
   "approvals": [
@@ -23,6 +28,11 @@
   "affected_versions": [
     "4.0.0",
     "5.0.0"
+  ],
+  "licenses": [
+    "LGPL-2.1",
+    "LGPL-3.0",
+    "Apache-2.0"
   ],
   "swhids": [
     "swh:1:dir:4b8e7f8c5e2f4e3a5d6e7f8c9b0a1c2d3e4f5a6b",

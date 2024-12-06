@@ -24,6 +24,11 @@
       "type": "string",
       "description": "Name of the affected package."
     },
+    "aliases": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of alternative names for the package across distributions."
+    },
     "publisher": {
       "type": "string",
       "description": "Publisher or maintainer of the package."
@@ -74,6 +79,11 @@
       "type": "array",
       "items": { "type": "string" },
       "description": "Links to additional resources or references."
+    },
+    "licenses": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of SPDX license identifiers associated with the package."
     },
     "swhids": {
       "type": "array",
