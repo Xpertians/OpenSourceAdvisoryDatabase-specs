@@ -48,7 +48,7 @@ def compute_swhid(file_path):
 
 def get_all_available_packages():
     command = ["dnf", "repoquery", "--source", "--qf", "%{NAME} %{VERSION}-%{RELEASE} %{ARCH}"]
-    result = subprocess.run(command, stdout=subprocess.PIPE, text=True)
+    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     if result.returncode != 0:
         print(f"Failed to fetch available packages: {result.stderr}")
         return []
