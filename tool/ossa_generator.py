@@ -177,6 +177,11 @@ def generate_ossa_file(package, version, arch, output_dir):
 
     cleanup_extracted_files("./extracted_sources")
 
+    aliases = []
+    package_cleaned = ''.join([char if not char.isdigit() else ' ' for char in package])
+    words = [word for word in package_cleaned.replace('-', ' ').split() if len(word) >= 3]
+    aliases.extend(words)
+
     ossa_data = {
         "id": ossa_id,
         "version": version,
@@ -199,6 +204,7 @@ def generate_ossa_file(package, version, arch, output_dir):
         "fuzzy_hashes": fuzzy_hashes,
         "artifacts": artifacts,
         "licenses": licenses,
+        "aliases": aliases,
         "references": [project_url] if project_url else []
     }
 
