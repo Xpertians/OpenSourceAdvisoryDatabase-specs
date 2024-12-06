@@ -9,7 +9,7 @@ import glob
 from pathlib import Path
 from swh.model.swhids import CoreSWHID
 
-def cleanup_source_packages(folder_path):
+def cleanup_source_packages(folder_path="./source_packages"):
     # Find all .rpm files in the folder
     rpm_files = glob.glob(f"{folder_path}/*.rpm")
     for file_path in rpm_files:
@@ -122,6 +122,7 @@ def generate_ossa_file(package, version, arch, output_dir):
     with open(output_path, "w") as f:
         json.dump(ossa_data, f, indent=4)
     print(f"Generated OSSA file: {output_path}")
+    cleanup_source_packages()
 
 # Main function
 def main(output_dir):
