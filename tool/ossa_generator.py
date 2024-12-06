@@ -46,9 +46,12 @@ def compute_swhid(file_path):
     swhid = f"swh:1:cnt:{sha1_hash}"
     return swhid
 
-def get_installed_packages():
-    command = ["rpm", "-qa", "--qf", "%{NAME} %{VERSION}-%{RELEASE} %{ARCH}\n"]
+def get_all_available_packages():
+    command = ["dnf", "repoquery", "--source", "--qf", "%{NAME} %{VERSION}-%{RELEASE} %{ARCH}"]
     result = subprocess.run(command, stdout=subprocess.PIPE, text=True)
+    if result.returncode != 0:
+        print(f"Failed to fetch available packages: {result.stderr}")
+        return []
     return [line.split() for line in result.stdout.strip().split("\n")]
 
 def get_source_package(package_name, dest_dir="./source_packages"):
@@ -184,7 +187,7 @@ def generate_ossa_file(package, version, arch, output_dir):
 
 def main(output_dir):
     os.makedirs(output_dir, exist_ok=True)
-    packages = get_installed_packages()
+    packages = get_all_available_packages()
     for package, version, arch in packages:
         generate_ossa_file(package, version, arch, output_dir)
 
