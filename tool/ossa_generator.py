@@ -47,12 +47,25 @@ def compute_swhid(file_path):
     return swhid
 
 def get_all_available_packages():
-    command = ["dnf", "repoquery", "--source", "--qf", "%{NAME} %{VERSION}-%{RELEASE} %{ARCH}"]
+    command = ["dnf", "repoquery", "--source"]
     result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     if result.returncode != 0:
         print(f"Failed to fetch available packages: {result.stderr}")
         return []
-    return [line.split() for line in result.stdout.strip().split("\n")]
+    
+    packages = []
+    for line in result.stdout.strip().split("\n"):
+        if line:
+            # Parse lines like: package-name-version-release.src
+            try:
+                parts = line.rsplit("-", 2)  # Split from the end
+                name = parts[0]
+                version_release = parts[1]
+                arch = "src"  # Source packages are always architecture 'src'
+                packages.append((name, version_release, arch))
+            except IndexError:
+                print(f"Failed to parse line: {line}")
+    return packages
 
 def get_source_package(package_name, dest_dir="./source_packages"):
     os.makedirs(dest_dir, exist_ok=True)
