@@ -6,7 +6,6 @@ import datetime
 import ssdeep
 import hashlib
 from pathlib import Path
-from swh.model.hashutil import hash_as_hex
 from swh.model.swhids import CoreSWHID
 
 
