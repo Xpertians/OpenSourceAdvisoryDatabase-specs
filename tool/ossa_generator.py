@@ -152,7 +152,7 @@ def generate_ossa_file(package, version, arch, output_dir):
         ],
         "artifacts": [
             {
-                "url": f"file://{source_path}",
+                "url": f"file://{os.path.basename(source_path)}",
                 "hashes": {
                     "sha256": sha256_hash
                 }
