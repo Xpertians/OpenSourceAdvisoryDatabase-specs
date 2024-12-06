@@ -47,7 +47,7 @@ def get_source_package(package_name, dest_dir="./source_packages"):
     result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     if result.returncode == 0:
         for file in os.listdir(dest_dir):
-            if file.endswith(".src.rpm") and package_name in file:
+            if file.endswith(".src.rpm"):
                 return os.path.join(dest_dir, file)
     return None
 
