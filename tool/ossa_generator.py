@@ -56,12 +56,11 @@ def get_all_available_packages():
     packages = []
     for line in result.stdout.strip().split("\n"):
         if line:
-            # Parse lines like: package-name-version-release.src
             try:
-                parts = line.rsplit("-", 2)  # Split from the end
+                parts = line.rsplit("-", 2)
                 name = parts[0]
                 version_release = parts[1]
-                arch = "src"  # Source packages are always architecture 'src'
+                arch = "src"
                 packages.append((name, version_release, arch))
             except IndexError:
                 print(f"Failed to parse line: {line}")
@@ -127,8 +126,17 @@ def generate_ossa_file(package, version, arch, output_dir):
     spec_dir = "./extracted_specs"
     spec_file = extract_spec_file(source_path, spec_dir)
     project_url, source_url = (None, None)
+    licenses = []
+
     if spec_file:
         project_url, source_url = extract_urls_from_spec(spec_file)
+        try:
+            with open(spec_file, "r") as spec:
+                for line in spec:
+                    if line.startswith("License:"):
+                        licenses.append(line.split(":", 1)[1].strip())
+        except FileNotFoundError:
+            print(f"Spec file not found: {spec_file}")
         cleanup_extracted_files(spec_dir)
 
     tarballs = extract_tarballs(source_path)
@@ -190,13 +198,13 @@ def generate_ossa_file(package, version, arch, output_dir):
         "swhids": swhids,
         "fuzzy_hashes": fuzzy_hashes,
         "artifacts": artifacts,
+        "licenses": licenses,
         "references": [project_url] if project_url else []
     }
 
     with open(output_path, "w") as f:
         json.dump(ossa_data, f, indent=4)
-    print(f"Generated OSSA file: {output_path}")
-    cleanup_source_packages()
+    print(f"Generated
 
 def main(output_dir):
     os.makedirs(output_dir, exist_ok=True)
