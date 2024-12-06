@@ -5,9 +5,19 @@ import hashlib
 import datetime
 import ssdeep
 import hashlib
+import glob
 from pathlib import Path
 from swh.model.swhids import CoreSWHID
 
+def cleanup_source_packages(folder_path):
+    # Find all .rpm files in the folder
+    rpm_files = glob.glob(f"{folder_path}/*.rpm")
+    for file_path in rpm_files:
+        try:
+            os.remove(file_path)
+            print(f"Deleted: {file_path}")
+        except Exception as e:
+            print(f"Failed to delete {file_path}: {e}")
 
 def compute_sha1(file_path):
     sha1 = hashlib.sha1()
