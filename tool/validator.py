@@ -1,186 +1,35 @@
-import os
 import json
-import subprocess
-import hashlib
-import datetime
-import ssdeep
-import glob
-from pathlib import Path
+import jsonschema
+from jsonschema import validate
+import argparse
 
-def cleanup_source_packages(folder_path="./source_packages"):
-    rpm_files = glob.glob(f"{folder_path}/*.rpm")
-    for file_path in rpm_files:
-        try:
-            os.remove(file_path)
-            print(f"Deleted: {file_path}")
-        except Exception as e:
-            print(f"Failed to delete {file_path}: {e}")
-
-def cleanup_extracted_files(folder_path):
+def validate_advisory(advisory_file, schema_file):
     try:
-        for file_path in glob.glob(f"{folder_path}/*"):
-            os.remove(file_path)
-            print(f"Deleted: {file_path}")
-    except Exception as e:
-        print(f"Failed to clean up {folder_path}: {e}")
+        # Load advisory and schema from external files
+        with open(schema_file, 'r') as schema_f:
+            schema = json.load(schema_f)
+        
+        with open(advisory_file, 'r') as advisory_f:
+            advisory_json = json.load(advisory_f)
 
-def compute_sha1(file_path):
-    sha1 = hashlib.sha1()
-    with open(file_path, "rb") as f:
-        for chunk in iter(lambda: f.read(4096), b""):
-            sha1.update(chunk)
-    return sha1.hexdigest()
+        # Validate the advisory
+        validate(instance=advisory_json, schema=schema)
+        print("Advisory is valid.")
+    except jsonschema.exceptions.ValidationError as err:
+        print(f"Validation error: {err.message}")
+    except FileNotFoundError as e:
+        print(f"File not found: {e}")
+    except json.JSONDecodeError as e:
+        print(f"JSON decode error: {e}")
 
-def compute_sha256(file_path):
-    sha256 = hashlib.sha256()
-    with open(file_path, "rb") as f:
-        for chunk in iter(lambda: f.read(4096), b""):
-            sha256.update(chunk)
-    return sha256.hexdigest()
+def main():
+    parser = argparse.ArgumentParser(description="Validate an OSS advisory JSON file against a schema.")
+    parser.add_argument("advisory_file", type=str, help="Path to the advisory JSON file to validate.")
+    parser.add_argument("schema_file", type=str, help="Path to the schema JSON file.")
+    
+    args = parser.parse_args()
 
-def compute_fuzzy_hash(file_path):
-    return ssdeep.hash_from_file(file_path)
-
-def compute_swhid(file_path):
-    sha1_hash = compute_sha1(file_path)
-    swhid = f"swh:1:cnt:{sha1_hash}"
-    return swhid
-
-def get_installed_packages():
-    command = ["rpm", "-qa", "--qf", "%{NAME} %{VERSION}-%{RELEASE} %{ARCH}\n"]
-    result = subprocess.run(command, stdout=subprocess.PIPE, text=True)
-    return [line.split() for line in result.stdout.strip().split("\n")]
-
-def get_source_package(package_name, dest_dir="./source_packages"):
-    os.makedirs(dest_dir, exist_ok=True)
-    command = ["yumdownloader", "--source", "--destdir", dest_dir, package_name]
-    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    if result.returncode == 0:
-        for file in os.listdir(dest_dir):
-            if file.endswith(".src.rpm"):
-                return os.path.join(dest_dir, file)
-    return None
-
-def extract_spec_file(srpm_path, dest_dir="./extracted_specs"):
-    os.makedirs(dest_dir, exist_ok=True)
-    try:
-        command = f"rpm2cpio {srpm_path} | cpio -idmv -D {dest_dir}"
-        subprocess.run(command, shell=True, check=True)
-        spec_files = [os.path.join(dest_dir, f) for f in os.listdir(dest_dir) if f.endswith(".spec")]
-        if spec_files:
-            return spec_files[0]
-    except subprocess.CalledProcessError as e:
-        print(f"Failed to extract spec file from {srpm_path}: {e}")
-    return None
-
-def extract_tarballs(srpm_path, dest_dir="./extracted_sources"):
-    os.makedirs(dest_dir, exist_ok=True)
-    try:
-        command = f"rpm2cpio {srpm_path} | cpio -idmv -D {dest_dir}"
-        subprocess.run(command, shell=True, check=True)
-        tarballs = [os.path.join(dest_dir, f) for f in os.listdir(dest_dir) if f.endswith((".tar.gz", ".tar.bz2", ".tar.xz", ".tgz"))]
-        return tarballs
-    except subprocess.CalledProcessError as e:
-        print(f"Failed to extract tarballs from {srpm_path}: {e}")
-    return []
-
-def extract_urls_from_spec(spec_file_path):
-    project_url = None
-    source_url = None
-    try:
-        with open(spec_file_path, "r") as spec_file:
-            for line in spec_file:
-                if line.startswith("URL:"):
-                    project_url = line.split(":", 1)[1].strip()
-                elif line.startswith("Source0:"):
-                    source_url = line.split(":", 1)[1].strip()
-    except FileNotFoundError:
-        print(f"Spec file not found: {spec_file_path}")
-    return project_url, source_url
-
-def generate_ossa_file(package, version, arch, output_dir):
-    package_name = f"{package}-{version}-{arch}"
-    ossa_id = f"OSSA-{datetime.datetime.now().strftime('%Y%m%d')}-{hash(package_name) % 10000}-{package}"
-    output_path = Path(output_dir) / f"{ossa_id}.json"
-
-    source_path = get_source_package(package)
-    if not source_path:
-        print(f"Source package for {package} not found in {package}.")
-        return
-
-    spec_dir = "./extracted_specs"
-    spec_file = extract_spec_file(source_path, spec_dir)
-    project_url, source_url = (None, None)
-    if spec_file:
-        project_url, source_url = extract_urls_from_spec(spec_file)
-        cleanup_extracted_files(spec_dir)
-
-    tarballs = extract_tarballs(source_path)
-    tarball_artifacts = []
-    for tarball in tarballs:
-        tarball_artifacts.append({
-            "url": f"file://{os.path.basename(tarball)}",
-            "hashes": {
-                "sha256": compute_sha256(tarball)
-            },
-            "swhid": compute_swhid(tarball),
-            "fuzzy_hash": compute_fuzzy_hash(tarball)
-        })
-    cleanup_extracted_files("./extracted_sources")
-
-    sha256_hash = compute_sha256(source_path)
-    fuzzy_hash = compute_fuzzy_hash(source_path)
-    swhid = compute_swhid(source_path)
-
-    ossa_data = {
-        "id": ossa_id,
-        "version": version,
-        "severity": "Informational",
-        "title": f"Advisory for {package}",
-        "package_name": package,
-        "publisher": "Generated by OSSA Collector",
-        "last_updated": datetime.datetime.now().isoformat(),
-        "approvals": [
-            {
-                "consumption": True,
-                "externalization": True
-            }
-        ],
-        "description": f"Automatically generated OSSA for {package}.",
-        "purls": [f"pkg:rpm/{package}@{version}?arch={arch}"],
-        "regex": [f"^pkg:rpm/{package}.*"],
-        "affected_versions": ["*.*"],
-        "swhids": [
-            swhid
-        ],
-        "fuzzy_hashes": [
-            {
-                "algorithm": "ssdeep",
-                "hash": fuzzy_hash
-            }
-        ],
-        "artifacts": [
-            {
-                "url": f"file://{os.path.basename(source_path)}",
-                "hashes": {
-                    "sha256": sha256_hash
-                }
-            }
-        ] + tarball_artifacts,
-        "references": [project_url] if project_url else []
-    }
-
-    with open(output_path, "w") as f:
-        json.dump(ossa_data, f, indent=4)
-    print(f"Generated OSSA file: {output_path}")
-    cleanup_source_packages()
-
-def main(output_dir):
-    os.makedirs(output_dir, exist_ok=True)
-    packages = get_installed_packages()
-    for package, version, arch in packages:
-        generate_ossa_file(package, version, arch, output_dir)
+    validate_advisory(args.advisory_file, args.schema_file)
 
 if __name__ == "__main__":
-    output_directory = "./ossa_reports"
-    main(output_directory)
+    main()

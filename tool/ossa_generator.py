@@ -8,7 +8,6 @@ import glob
 from pathlib import Path
 
 def cleanup_source_packages(folder_path="./source_packages"):
-    # Find all .rpm files in the folder
     rpm_files = glob.glob(f"{folder_path}/*.rpm")
     for file_path in rpm_files:
         try:
@@ -18,7 +17,6 @@ def cleanup_source_packages(folder_path="./source_packages"):
             print(f"Failed to delete {file_path}: {e}")
 
 def cleanup_extracted_files(folder_path):
-    # Delete all files in the specified folder
     try:
         for file_path in glob.glob(f"{folder_path}/*"):
             os.remove(file_path)
@@ -33,12 +31,6 @@ def compute_sha1(file_path):
             sha1.update(chunk)
     return sha1.hexdigest()
 
-def compute_swhid(file_path):
-    sha1_hash = compute_sha1(file_path)
-    swhid = f"swh:1:cnt:{sha1_hash}"
-    return swhid
-
-# Function to compute SHA-256 hash
 def compute_sha256(file_path):
     sha256 = hashlib.sha256()
     with open(file_path, "rb") as f:
@@ -46,17 +38,19 @@ def compute_sha256(file_path):
             sha256.update(chunk)
     return sha256.hexdigest()
 
-# Function to compute fuzzy hash
 def compute_fuzzy_hash(file_path):
     return ssdeep.hash_from_file(file_path)
 
-# Function to get installed packages
+def compute_swhid(file_path):
+    sha1_hash = compute_sha1(file_path)
+    swhid = f"swh:1:cnt:{sha1_hash}"
+    return swhid
+
 def get_installed_packages():
     command = ["rpm", "-qa", "--qf", "%{NAME} %{VERSION}-%{RELEASE} %{ARCH}\n"]
     result = subprocess.run(command, stdout=subprocess.PIPE, text=True)
     return [line.split() for line in result.stdout.strip().split("\n")]
 
-# Function to download source package or tarball
 def get_source_package(package_name, dest_dir="./source_packages"):
     os.makedirs(dest_dir, exist_ok=True)
     command = ["yumdownloader", "--source", "--destdir", dest_dir, package_name]
@@ -67,7 +61,6 @@ def get_source_package(package_name, dest_dir="./source_packages"):
                 return os.path.join(dest_dir, file)
     return None
 
-# Function to extract .spec file
 def extract_spec_file(srpm_path, dest_dir="./extracted_specs"):
     os.makedirs(dest_dir, exist_ok=True)
     try:
@@ -75,13 +68,22 @@ def extract_spec_file(srpm_path, dest_dir="./extracted_specs"):
         subprocess.run(command, shell=True, check=True)
         spec_files = [os.path.join(dest_dir, f) for f in os.listdir(dest_dir) if f.endswith(".spec")]
         if spec_files:
-            print(f"Spec file extracted: {spec_files[0]}")
             return spec_files[0]
     except subprocess.CalledProcessError as e:
         print(f"Failed to extract spec file from {srpm_path}: {e}")
     return None
 
-# Function to extract URLs from .spec file
+def extract_tarballs(srpm_path, dest_dir="./extracted_sources"):
+    os.makedirs(dest_dir, exist_ok=True)
+    try:
+        command = f"rpm2cpio {srpm_path} | cpio -idmv -D {dest_dir}"
+        subprocess.run(command, shell=True, check=True)
+        tarballs = [os.path.join(dest_dir, f) for f in os.listdir(dest_dir) if f.endswith((".tar.gz", ".tar.bz2", ".tar.xz", ".tgz"))]
+        return tarballs
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to extract tarballs from {srpm_path}: {e}")
+    return []
+
 def extract_urls_from_spec(spec_file_path):
     project_url = None
     source_url = None
@@ -96,33 +98,40 @@ def extract_urls_from_spec(spec_file_path):
         print(f"Spec file not found: {spec_file_path}")
     return project_url, source_url
 
-# Function to generate OSSA file
 def generate_ossa_file(package, version, arch, output_dir):
     package_name = f"{package}-{version}-{arch}"
     ossa_id = f"OSSA-{datetime.datetime.now().strftime('%Y%m%d')}-{hash(package_name) % 10000}-{package}"
     output_path = Path(output_dir) / f"{ossa_id}.json"
 
-    # Retrieve source package or tarball
     source_path = get_source_package(package)
     if not source_path:
         print(f"Source package for {package} not found in {package}.")
         return
 
-    # Extract URLs from .spec file
     spec_dir = "./extracted_specs"
     spec_file = extract_spec_file(source_path, spec_dir)
     project_url, source_url = (None, None)
     if spec_file:
         project_url, source_url = extract_urls_from_spec(spec_file)
-        # Cleanup extracted .spec files
         cleanup_extracted_files(spec_dir)
 
-    # Compute hashes
+    tarballs = extract_tarballs(source_path)
+    tarball_artifacts = []
+    for tarball in tarballs:
+        tarball_artifacts.append({
+            "url": f"file://{os.path.basename(tarball)}",
+            "hashes": {
+                "sha256": compute_sha256(tarball)
+            },
+            "swhid": compute_swhid(tarball),
+            "fuzzy_hash": compute_fuzzy_hash(tarball)
+        })
+    cleanup_extracted_files("./extracted_sources")
+
     sha256_hash = compute_sha256(source_path)
     fuzzy_hash = compute_fuzzy_hash(source_path)
     swhid = compute_swhid(source_path)
 
-    # Construct the OSSA file
     ossa_data = {
         "id": ossa_id,
         "version": version,
@@ -140,7 +149,7 @@ def generate_ossa_file(package, version, arch, output_dir):
         "description": f"Automatically generated OSSA for {package}.",
         "purls": [f"pkg:rpm/{package}@{version}?arch={arch}"],
         "regex": [f"^pkg:rpm/{package}.*"],
-        "affected_versions": [version],
+        "affected_versions": ["*.*"],
         "swhids": [
             swhid
         ],
@@ -156,24 +165,16 @@ def generate_ossa_file(package, version, arch, output_dir):
                 "hashes": {
                     "sha256": sha256_hash
                 }
-            },
-            {
-                "url": source_url,
-                "type": "original_source"
             }
-        ],
+        ] + tarball_artifacts,
         "references": [project_url] if project_url else []
     }
 
-    # Write the OSSA file
     with open(output_path, "w") as f:
         json.dump(ossa_data, f, indent=4)
     print(f"Generated OSSA file: {output_path}")
-
-    # Cleanup source RPMs after generating OSSA
     cleanup_source_packages()
 
-# Main function
 def main(output_dir):
     os.makedirs(output_dir, exist_ok=True)
     packages = get_installed_packages()
