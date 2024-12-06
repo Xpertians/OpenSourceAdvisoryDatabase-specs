@@ -128,21 +128,27 @@ def generate_ossa_file(package, version, arch, output_dir):
             "url": f"file://{os.path.basename(source_path)}",
             "hashes": {
                 "sha256": compute_sha256(source_path)
-            }
+            },
+            "swhid": compute_swhid(source_path),
+            "fuzzy_hash": compute_fuzzy_hash(source_path)
         }
     ]
 
     for tarball in tarballs:
-        swhids.append(compute_swhid(tarball))
+        swhid = compute_swhid(tarball)
+        fuzzy_hash = compute_fuzzy_hash(tarball)
+        swhids.append(swhid)
         fuzzy_hashes.append({
             "algorithm": "ssdeep",
-            "hash": compute_fuzzy_hash(tarball)
+            "hash": fuzzy_hash
         })
         artifacts.append({
             "url": f"file://{os.path.basename(tarball)}",
             "hashes": {
                 "sha256": compute_sha256(tarball)
-            }
+            },
+            "swhid": swhid,
+            "fuzzy_hash": fuzzy_hash
         })
 
     cleanup_extracted_files("./extracted_sources")
