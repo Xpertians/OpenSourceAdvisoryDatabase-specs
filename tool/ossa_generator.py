@@ -204,7 +204,8 @@ def generate_ossa_file(package, version, arch, output_dir):
 
     with open(output_path, "w") as f:
         json.dump(ossa_data, f, indent=4)
-    print(f"Generated
+    print(f"Generated OSSA file: {output_path}")
+    cleanup_source_packages()
 
 def main(output_dir):
     os.makedirs(output_dir, exist_ok=True)
