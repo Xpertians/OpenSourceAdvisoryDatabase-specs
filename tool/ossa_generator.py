@@ -116,21 +116,23 @@ def generate_ossa_file(package, version, arch, output_dir):
         cleanup_extracted_files(spec_dir)
 
     tarballs = extract_tarballs(source_path)
-    tarball_artifacts = []
+    swhids = [compute_swhid(source_path)]
+    fuzzy_hashes = [
+        {
+            "algorithm": "ssdeep",
+            "hash": compute_fuzzy_hash(source_path)
+        }
+    ]
+
     for tarball in tarballs:
-        tarball_artifacts.append({
-            "url": f"file://{os.path.basename(tarball)}",
-            "hashes": {
-                "sha256": compute_sha256(tarball)
-            },
-            "swhid": compute_swhid(tarball),
-            "fuzzy_hash": compute_fuzzy_hash(tarball)
+        swhids.append(compute_swhid(tarball))
+        fuzzy_hashes.append({
+            "algorithm": "ssdeep",
+            "hash": compute_fuzzy_hash(tarball)
         })
     cleanup_extracted_files("./extracted_sources")
 
     sha256_hash = compute_sha256(source_path)
-    fuzzy_hash = compute_fuzzy_hash(source_path)
-    swhid = compute_swhid(source_path)
 
     ossa_data = {
         "id": ossa_id,
@@ -150,15 +152,8 @@ def generate_ossa_file(package, version, arch, output_dir):
         "purls": [f"pkg:rpm/{package}@{version}?arch={arch}"],
         "regex": [f"^pkg:rpm/{package}.*"],
         "affected_versions": ["*.*"],
-        "swhids": [
-            swhid
-        ],
-        "fuzzy_hashes": [
-            {
-                "algorithm": "ssdeep",
-                "hash": fuzzy_hash
-            }
-        ],
+        "swhids": swhids,
+        "fuzzy_hashes": fuzzy_hashes,
         "artifacts": [
             {
                 "url": f"file://{os.path.basename(source_path)}",
@@ -166,7 +161,7 @@ def generate_ossa_file(package, version, arch, output_dir):
                     "sha256": sha256_hash
                 }
             }
-        ] + tarball_artifacts,
+        ],
         "references": [project_url] if project_url else []
     }
 
