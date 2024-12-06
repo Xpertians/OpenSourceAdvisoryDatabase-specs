@@ -4,9 +4,24 @@ import subprocess
 import hashlib
 import datetime
 import ssdeep
+import hashlib
 from pathlib import Path
 from swh.model.hashutil import hash_as_hex
 from swh.model.swhids import CoreSWHID
+
+
+def compute_sha1(file_path):
+    sha1 = hashlib.sha1()
+    with open(file_path, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            sha1.update(chunk)
+    return sha1.hexdigest()
+
+def compute_swhid(file_path):
+    sha1_hash = compute_sha1(file_path)
+    swhid = CoreSWHID.from_hash('cnt', sha1_hash)
+    return str(swhid)
+
 
 # Function to compute SHA-256 hash
 def compute_sha256(file_path):
@@ -19,16 +34,6 @@ def compute_sha256(file_path):
 # Function to compute fuzzy hash
 def compute_fuzzy_hash(file_path):
     return ssdeep.hash_from_file(file_path)
-
-# Function to compute SWHID
-def compute_swhid(file_path):
-    sha1 = hashlib.sha1()
-    with open(file_path, "rb") as f:
-        for chunk in iter(lambda: f.read(4096), b""):
-            sha1.update(chunk)
-    sha1_hash = sha1.hexdigest()
-    swhid = CoreSWHID.from_hash('cnt', sha1_hash)
-    return str(swhid)
 
 # Function to get installed packages
 def get_installed_packages():
