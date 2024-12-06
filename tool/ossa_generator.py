@@ -17,6 +17,15 @@ def cleanup_source_packages(folder_path="./source_packages"):
         except Exception as e:
             print(f"Failed to delete {file_path}: {e}")
 
+def cleanup_extracted_files(folder_path):
+    # Delete all files in the specified folder
+    try:
+        for file_path in glob.glob(f"{folder_path}/*"):
+            os.remove(file_path)
+            print(f"Deleted: {file_path}")
+    except Exception as e:
+        print(f"Failed to clean up {folder_path}: {e}")
+
 def compute_sha1(file_path):
     sha1 = hashlib.sha1()
     with open(file_path, "rb") as f:
@@ -97,13 +106,16 @@ def generate_ossa_file(package, version, arch, output_dir):
     source_path = get_source_package(package)
     if not source_path:
         print(f"Source package for {package} not found in {package}.")
-        exit()
+        return
 
     # Extract URLs from .spec file
-    spec_file = extract_spec_file(source_path)
+    spec_dir = "./extracted_specs"
+    spec_file = extract_spec_file(source_path, spec_dir)
     project_url, source_url = (None, None)
     if spec_file:
         project_url, source_url = extract_urls_from_spec(spec_file)
+        # Cleanup extracted .spec files
+        cleanup_extracted_files(spec_dir)
 
     # Compute hashes
     sha256_hash = compute_sha256(source_path)
@@ -157,6 +169,8 @@ def generate_ossa_file(package, version, arch, output_dir):
     with open(output_path, "w") as f:
         json.dump(ossa_data, f, indent=4)
     print(f"Generated OSSA file: {output_path}")
+
+    # Cleanup source RPMs after generating OSSA
     cleanup_source_packages()
 
 # Main function
