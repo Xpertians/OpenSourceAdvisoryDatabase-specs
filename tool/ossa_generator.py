@@ -4,10 +4,8 @@ import subprocess
 import hashlib
 import datetime
 import ssdeep
-import hashlib
 import glob
 from pathlib import Path
-from swh.model.swhids import CoreSWHID
 
 def cleanup_source_packages(folder_path="./source_packages"):
     # Find all .rpm files in the folder
@@ -60,6 +58,35 @@ def get_source_package(package_name, dest_dir="./source_packages"):
                 return os.path.join(dest_dir, file)
     return None
 
+# Function to extract .spec file
+def extract_spec_file(srpm_path, dest_dir="./extracted_specs"):
+    os.makedirs(dest_dir, exist_ok=True)
+    try:
+        command = f"rpm2cpio {srpm_path} | cpio -idmv -D {dest_dir}"
+        subprocess.run(command, shell=True, check=True)
+        spec_files = [os.path.join(dest_dir, f) for f in os.listdir(dest_dir) if f.endswith(".spec")]
+        if spec_files:
+            print(f"Spec file extracted: {spec_files[0]}")
+            return spec_files[0]
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to extract spec file from {srpm_path}: {e}")
+    return None
+
+# Function to extract URLs from .spec file
+def extract_urls_from_spec(spec_file_path):
+    project_url = None
+    source_url = None
+    try:
+        with open(spec_file_path, "r") as spec_file:
+            for line in spec_file:
+                if line.startswith("URL:"):
+                    project_url = line.split(":", 1)[1].strip()
+                elif line.startswith("Source0:"):
+                    source_url = line.split(":", 1)[1].strip()
+    except FileNotFoundError:
+        print(f"Spec file not found: {spec_file_path}")
+    return project_url, source_url
+
 # Function to generate OSSA file
 def generate_ossa_file(package, version, arch, output_dir):
     package_name = f"{package}-{version}-{arch}"
@@ -67,12 +94,16 @@ def generate_ossa_file(package, version, arch, output_dir):
     output_path = Path(output_dir) / f"{ossa_id}.json"
 
     # Retrieve source package or tarball
-    print(package)
     source_path = get_source_package(package)
     if not source_path:
         print(f"Source package for {package} not found in {package}.")
         exit()
-        return
+
+    # Extract URLs from .spec file
+    spec_file = extract_spec_file(source_path)
+    project_url, source_url = (None, None)
+    if spec_file:
+        project_url, source_url = extract_urls_from_spec(spec_file)
 
     # Compute hashes
     sha256_hash = compute_sha256(source_path)
@@ -113,9 +144,13 @@ def generate_ossa_file(package, version, arch, output_dir):
                 "hashes": {
                     "sha256": sha256_hash
                 }
+            },
+            {
+                "url": source_url,
+                "type": "original_source"
             }
         ],
-        "references": []
+        "references": [project_url] if project_url else []
     }
 
     # Write the OSSA file
