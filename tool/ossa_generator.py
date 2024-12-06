@@ -57,9 +57,11 @@ def generate_ossa_file(package, version, arch, output_dir):
     output_path = Path(output_dir) / f"{ossa_id}.json"
 
     # Retrieve source package or tarball
+    print(package)
     source_path = get_source_package(package)
     if not source_path:
-        print(f"Source package for {package} not found.")
+        print(f"Source package for {package} not found in {package}.")
+        exit()
         return
 
     # Compute hashes
