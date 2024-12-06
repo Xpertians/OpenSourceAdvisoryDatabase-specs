@@ -41,13 +41,14 @@ def get_installed_packages():
     return [line.split() for line in result.stdout.strip().split("\n")]
 
 # Function to download source package or tarball
-def get_source_package(package_name):
-    command = ["yumdownloader", "--source", package_name]
+def get_source_package(package_name, dest_dir="./source_packages"):
+    os.makedirs(dest_dir, exist_ok=True)
+    command = ["yumdownloader", "--source", "--destdir", dest_dir, package_name]
     result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     if result.returncode == 0:
-        for line in result.stdout.split("\n"):
-            if line.endswith(".src.rpm"):
-                return line.strip()
+        for file in os.listdir(dest_dir):
+            if file.endswith(".src.rpm") and package_name in file:
+                return os.path.join(dest_dir, file)
     return None
 
 # Function to generate OSSA file
