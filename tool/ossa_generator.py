@@ -6,7 +6,6 @@ import datetime
 import ssdeep
 import glob
 from pathlib import Path
-from swh.model.hashutil import hash_as_hex
 from swh.model.swhids import CoreSWHID
 
 def cleanup_source_packages(folder_path="./source_packages"):
@@ -17,6 +16,13 @@ def cleanup_source_packages(folder_path="./source_packages"):
             print(f"Deleted: {file_path}")
         except Exception as e:
             print(f"Failed to delete {file_path}: {e}")
+
+def compute_hash_as_hex(file_path, hash_type="sha1"):
+    hash_function = hashlib.new(hash_type)
+    with open(file_path, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_function.update(chunk)
+    return hash_function.hexdigest()
 
 def compute_folder_swhid(folder_path):
     """Calculate the SWHID for a folder using `sw identify .`."""
