@@ -154,7 +154,7 @@ def process_tarball(tarball_path):
         subprocess.run(command, shell=True, check=True)
         
         # Calculate SWHID for the extracted folder
-        folder_swhid = compute_folder_swhid(temp_dir)
+        folder_swhid = compute_folder_swhid(temp_dir).trim()
         print("folder_swhid:", folder_swhid)
         return folder_swhid
     except subprocess.CalledProcessError as e:
@@ -220,6 +220,7 @@ def generate_ossa_file(package, version, arch, output_dir):
         folder_swhid = process_tarball(tarball)
         if folder_swhid:
             swhids.append(folder_swhid)
+            swhid = folder_swhid
         fuzzy_hashes.append({
             "algorithm": "ssdeep",
             "hash": fuzzy_hash
