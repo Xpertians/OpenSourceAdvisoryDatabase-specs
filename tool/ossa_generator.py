@@ -154,7 +154,7 @@ def process_tarball(tarball_path):
         subprocess.run(command, shell=True, check=True)
         
         # Calculate SWHID for the extracted folder
-        folder_swhid = compute_folder_swhid(temp_dir).trim()
+        folder_swhid = compute_folder_swhid(temp_dir)
         print("folder_swhid:", folder_swhid)
         return folder_swhid
     except subprocess.CalledProcessError as e:
