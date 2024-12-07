@@ -17,6 +17,28 @@ def cleanup_source_packages(folder_path="./source_packages"):
         except Exception as e:
             print(f"Failed to delete {file_path}: {e}")
 
+def get_all_available_packages():
+    """Fetch all available packages from enabled repositories."""
+    command = ["dnf", "repoquery", "--available", "--source"]
+    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    if result.returncode != 0:
+        print(f"Failed to fetch available packages: {result.stderr}")
+        return []
+    
+    packages = []
+    for line in result.stdout.strip().split("\n"):
+        if line:
+            try:
+                parts = line.rsplit("-", 2)
+                name = parts[0]
+                version_release = parts[1]
+                arch = "src"
+                packages.append((name, version_release, arch))
+            except IndexError:
+                print(f"Failed to parse line: {line}")
+    return packages
+
+
 def cleanup_extracted_files(folder_path):
     try:
         shutil.rmtree(folder_path)
