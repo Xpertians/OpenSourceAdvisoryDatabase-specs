@@ -38,6 +38,14 @@ def get_all_available_packages():
                 print(f"Failed to parse line: {line}")
     return packages
 
+def get_source_package(package_name):
+    command = ["yumdownloader", "--source", package_name]
+    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    if result.returncode == 0:
+        for line in result.stdout.split("\n"):
+            if line.endswith(".src.rpm"):
+                return line.strip()
+    return None
 
 def cleanup_extracted_files(folder_path):
     try:
