@@ -5,6 +5,7 @@ import hashlib
 import datetime
 import ssdeep
 import glob
+import shutil
 from pathlib import Path
 from swh.model.swhids import CoreSWHID
 
@@ -40,10 +41,15 @@ def compute_folder_swhid(folder_path):
     return None
 
 def cleanup_extracted_files(folder_path):
+    """Recursively clean up files and directories in the specified folder."""
     try:
         for file_path in glob.glob(f"{folder_path}/*"):
-            os.remove(file_path)
-            print(f"Deleted: {file_path}")
+            if os.path.isdir(file_path):
+                shutil.rmtree(file_path)  # Recursively delete directories
+                print(f"Deleted directory: {file_path}")
+            else:
+                os.remove(file_path)  # Delete files
+                print(f"Deleted file: {file_path}")
     except Exception as e:
         print(f"Failed to clean up {folder_path}: {e}")
 
