@@ -27,7 +27,7 @@ def compute_hash_as_hex(file_path, hash_type="sha1"):
 def compute_folder_swhid(folder_path):
     """Calculate the SWHID for a folder using `sw identify .`."""
     try:
-        command = ["sw", "identify", folder_path]
+        command = ["swh", "identify", folder_path]
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         if result.returncode == 0:
             for line in result.stdout.strip().split("\n"):
