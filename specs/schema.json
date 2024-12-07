@@ -94,26 +94,6 @@
       },
       "description": "List of Software Heritage Identifiers related to the package."
     },
-    "fuzzy_hashes": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "algorithm": {
-            "type": "string",
-            "enum": ["ssdeep", "sdhash", "tlsh"],
-            "description": "Algorithm used to compute the fuzzy hash."
-          },
-          "hash": {
-            "type": "string",
-            "description": "The computed fuzzy hash value."
-          }
-        },
-        "required": ["algorithm", "hash"],
-        "description": "Fuzzy hash details including algorithm and hash value."
-      },
-      "description": "List of fuzzy hashes for the package, specifying the algorithm used."
-    },
     "artifacts": {
       "type": "array",
       "items": {

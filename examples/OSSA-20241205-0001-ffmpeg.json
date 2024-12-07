@@ -34,16 +34,6 @@
     "LGPL-3.0",
     "Apache-2.0"
   ],
-  "swhids": [
-    "swh:1:dir:4b8e7f8c5e2f4e3a5d6e7f8c9b0a1c2d3e4f5a6b",
-    "swh:1:rev:5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d"
-  ],
-  "fuzzy_hashes": [
-    {
-      "algorithm": "ssdeep",
-      "hash": "3:hFO0:1hFO0"
-    }
-  ],
   "artifacts": [
     {
       "url": "https://ffmpeg.org/releases/ffmpeg-4.4.tar.bz2",
