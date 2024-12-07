@@ -215,8 +215,6 @@ def generate_ossa_file(package, version, arch, output_dir):
         "purls": [f"pkg:rpm/{package}@{version}?arch={arch}"],
         "regex": [f"^pkg:rpm/{package}.*"],
         "affected_versions": ["*.*", version],
-        "swhids": swhids,
-        "fuzzy_hashes": fuzzy_hashes,
         "artifacts": artifacts,
         "licenses": licenses,
         "aliases": aliases,

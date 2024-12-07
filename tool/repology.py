@@ -21,7 +21,8 @@ def find_package_info(rpm_package_name):
                 repo_name = repo.get('repo', 'unknown_repo').lower()
                 if any(distro in repo_name for distro in target_distros):
                     package_visiblename = repo.get('visiblename', rpm_package_name)
-                    aliases.add(package_visiblename)
+                    if not "-" in package_visiblename:
+                        aliases.add(package_visiblename)
 
             return sorted(aliases)
         except ValueError as e:
@@ -35,7 +36,7 @@ def find_package_info(rpm_package_name):
         return [], set()
 
 # Example usage
-rpm_package = "gcc"
+rpm_package = "zziplib"
 aliases = find_package_info(rpm_package)
 
 if aliases:
