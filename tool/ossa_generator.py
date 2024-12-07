@@ -250,8 +250,7 @@ def generate_ossa_file(package, version, arch, output_dir):
 
 def main(output_dir):
     os.makedirs(output_dir, exist_ok=True)
-    packages = 
-    ()
+    packages = get_all_available_packages()
     for package, version, arch in packages:
         generate_ossa_file(package, version, arch, output_dir)
 
