@@ -32,12 +32,14 @@ def compute_folder_swhid(folder_path):
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         if result.returncode == 0:
             for line in result.stdout.strip().split("\n"):
+                # Split the output to extract the SWHID
                 if line.startswith("swh:1:dir:"):
-                    return line.strip()
+                    swhid = line.split("\t")[0]  # Extract the SWHID part
+                    return swhid
         else:
             print(f"Failed to compute folder SWHID: {result.stderr}")
     except FileNotFoundError:
-        print(f"The `sw` command is not installed or not found in PATH.")
+        print(f"The `swh` command is not installed or not found in PATH.")
     return None
 
 def cleanup_extracted_files(folder_path):
