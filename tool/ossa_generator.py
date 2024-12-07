@@ -6,6 +6,8 @@ import datetime
 import ssdeep
 import glob
 from pathlib import Path
+from swh.model.hashutil import hash_as_hex
+from swh.model.swhids import CoreSWHID
 
 def cleanup_source_packages(folder_path="./source_packages"):
     rpm_files = glob.glob(f"{folder_path}/*.rpm")
@@ -15,6 +17,21 @@ def cleanup_source_packages(folder_path="./source_packages"):
             print(f"Deleted: {file_path}")
         except Exception as e:
             print(f"Failed to delete {file_path}: {e}")
+
+def compute_folder_swhid(folder_path):
+    """Calculate the SWHID for a folder using `sw identify .`."""
+    try:
+        command = ["sw", "identify", folder_path]
+        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if result.returncode == 0:
+            for line in result.stdout.strip().split("\n"):
+                if line.startswith("swh:1:dir:"):
+                    return line.strip()
+        else:
+            print(f"Failed to compute folder SWHID: {result.stderr}")
+    except FileNotFoundError:
+        print(f"The `sw` command is not installed or not found in PATH.")
+    return None
 
 def cleanup_extracted_files(folder_path):
     try:
@@ -113,6 +130,24 @@ def extract_urls_from_spec(spec_file_path):
         print(f"Spec file not found: {spec_file_path}")
     return project_url, source_url
 
+def process_tarball(tarball_path):
+    """Extract tarball, calculate SWHID for folder, and clean up."""
+    temp_dir = "./temp_tarball_extraction"
+    os.makedirs(temp_dir, exist_ok=True)
+    try:
+        # Extract the tarball
+        command = f"tar -xf {tarball_path} -C {temp_dir}"
+        subprocess.run(command, shell=True, check=True)
+        
+        # Calculate SWHID for the extracted folder
+        folder_swhid = compute_folder_swhid(temp_dir)
+        return folder_swhid
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to process tarball {tarball_path}: {e}")
+    finally:
+        cleanup_extracted_files(temp_dir)
+    return None
+
 def generate_ossa_file(package, version, arch, output_dir):
     package_name = f"{package}-{version}-{arch}"
     ossa_id = f"OSSA-{datetime.datetime.now().strftime('%Y%m%d')}-{hash(package_name) % 10000}-{package}"
@@ -165,8 +200,11 @@ def generate_ossa_file(package, version, arch, output_dir):
 
     for tarball in tarballs:
         swhid = compute_swhid(tarball)
-        fuzzy_hash = compute_fuzzy_hash(tarball)
         swhids.append(swhid)
+        fuzzy_hash = compute_fuzzy_hash(tarball)
+        folder_swhid = process_tarball(tarball)
+        if folder_swhid:
+            swhids.append(folder_swhid)
         fuzzy_hashes.append({
             "algorithm": "ssdeep",
             "hash": fuzzy_hash
