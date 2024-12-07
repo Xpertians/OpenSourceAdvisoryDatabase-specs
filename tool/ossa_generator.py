@@ -5,7 +5,6 @@ import hashlib
 import datetime
 import ssdeep
 import glob
-import shutil
 from pathlib import Path
 
 def cleanup_source_packages(folder_path="./source_packages"):
@@ -17,10 +16,33 @@ def cleanup_source_packages(folder_path="./source_packages"):
         except Exception as e:
             print(f"Failed to delete {file_path}: {e}")
 
+def get_all_available_packages():
+    """Fetch all available packages from enabled repositories."""
+    command = ["dnf", "repoquery", "--available", "--source"]
+    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    if result.returncode != 0:
+        print(f"Failed to fetch available packages: {result.stderr}")
+        return []
+    
+    packages = []
+    for line in result.stdout.strip().split("\n"):
+        if line:
+            try:
+                parts = line.rsplit("-", 2)
+                name = parts[0]
+                version_release = parts[1]
+                arch = "src"
+                packages.append((name, version_release, arch))
+            except IndexError:
+                print(f"Failed to parse line: {line}")
+    return packages
+
+
 def cleanup_extracted_files(folder_path):
     try:
-        shutil.rmtree(folder_path)
-        print(f"Deleted: {folder_path}")
+        for file_path in glob.glob(f"{folder_path}/*"):
+            os.remove(file_path)
+            print(f"Deleted: {file_path}")
     except Exception as e:
         print(f"Failed to clean up {folder_path}: {e}")
 
@@ -46,19 +68,46 @@ def compute_swhid(file_path):
     swhid = f"swh:1:cnt:{sha1_hash}"
     return swhid
 
-def compute_folder_swhid(folder_path):
-    """Calculate the SWHID for a folder using `sw identify .`."""
+def get_all_available_packages():
+    command = ["dnf", "repoquery", "--source"]
+    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    if result.returncode != 0:
+        print(f"Failed to fetch available packages: {result.stderr}")
+        return []
+    
+    packages = []
+    for line in result.stdout.strip().split("\n"):
+        if line:
+            try:
+                parts = line.rsplit("-", 2)
+                name = parts[0]
+                version_release = parts[1]
+                arch = "src"
+                packages.append((name, version_release, arch))
+            except IndexError:
+                print(f"Failed to parse line: {line}")
+    return packages
+
+def get_source_package(package_name, dest_dir="./source_packages"):
+    os.makedirs(dest_dir, exist_ok=True)
+    command = ["yumdownloader", "--source", "--destdir", dest_dir, package_name]
+    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    if result.returncode == 0:
+        for file in os.listdir(dest_dir):
+            if file.endswith(".src.rpm"):
+                return os.path.join(dest_dir, file)
+    return None
+
+def extract_spec_file(srpm_path, dest_dir="./extracted_specs"):
+    os.makedirs(dest_dir, exist_ok=True)
     try:
-        command = ["sw", "identify", folder_path]
-        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        if result.returncode == 0:
-            for line in result.stdout.strip().split("\n"):
-                if line.startswith("swh:1:dir:"):
-                    return line.strip()
-        else:
-            print(f"Failed to compute folder SWHID: {result.stderr}")
-    except FileNotFoundError:
-        print(f"The `sw` command is not installed or not found in PATH.")
+        command = f"rpm2cpio {srpm_path} | cpio -idmv -D {dest_dir}"
+        subprocess.run(command, shell=True, check=True)
+        spec_files = [os.path.join(dest_dir, f) for f in os.listdir(dest_dir) if f.endswith(".spec")]
+        if spec_files:
+            return spec_files[0]
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to extract spec file from {srpm_path}: {e}")
     return None
 
 def extract_tarballs(srpm_path, dest_dir="./extracted_sources"):
@@ -72,23 +121,19 @@ def extract_tarballs(srpm_path, dest_dir="./extracted_sources"):
         print(f"Failed to extract tarballs from {srpm_path}: {e}")
     return []
 
-def process_tarball(tarball_path):
-    """Extract tarball, calculate SWHID for folder, and clean up."""
-    temp_dir = "./temp_tarball_extraction"
-    os.makedirs(temp_dir, exist_ok=True)
+def extract_urls_from_spec(spec_file_path):
+    project_url = None
+    source_url = None
     try:
-        # Extract the tarball
-        command = f"tar -xf {tarball_path} -C {temp_dir}"
-        subprocess.run(command, shell=True, check=True)
-        
-        # Calculate SWHID for the extracted folder
-        folder_swhid = compute_folder_swhid(temp_dir)
-        return folder_swhid
-    except subprocess.CalledProcessError as e:
-        print(f"Failed to process tarball {tarball_path}: {e}")
-    finally:
-        cleanup_extracted_files(temp_dir)
-    return None
+        with open(spec_file_path, "r") as spec_file:
+            for line in spec_file:
+                if line.startswith("URL:"):
+                    project_url = line.split(":", 1)[1].strip()
+                elif line.startswith("Source0:"):
+                    source_url = line.split(":", 1)[1].strip()
+    except FileNotFoundError:
+        print(f"Spec file not found: {spec_file_path}")
+    return project_url, source_url
 
 def generate_ossa_file(package, version, arch, output_dir):
     package_name = f"{package}-{version}-{arch}"
@@ -99,6 +144,27 @@ def generate_ossa_file(package, version, arch, output_dir):
     if not source_path:
         print(f"Source package for {package} not found in {package}.")
         return
+
+    spec_dir = "./extracted_specs"
+    spec_file = extract_spec_file(source_path, spec_dir)
+    project_url, source_url = (None, None)
+    licenses = []
+    license_categories = {
+        "copyleft": ["GPL", "AGPL"],
+        "weak_copyleft": ["LGPL", "MPL", "EPL", "CDDL"],
+        "permissive": ["MIT", "BSD", "Apache"]
+    }
+
+    if spec_file:
+        project_url, source_url = extract_urls_from_spec(spec_file)
+        try:
+            with open(spec_file, "r") as spec:
+                for line in spec:
+                    if line.startswith("License:"):
+                        licenses.append(line.split(":", 1)[1].strip())
+        except FileNotFoundError:
+            print(f"Spec file not found: {spec_file}")
+        cleanup_extracted_files(spec_dir)
 
     tarballs = extract_tarballs(source_path)
     swhids = [compute_swhid(source_path)]
@@ -121,11 +187,8 @@ def generate_ossa_file(package, version, arch, output_dir):
 
     for tarball in tarballs:
         swhid = compute_swhid(tarball)
-        folder_swhid = process_tarball(tarball)
         fuzzy_hash = compute_fuzzy_hash(tarball)
         swhids.append(swhid)
-        if folder_swhid:
-            swhids.append(folder_swhid)
         fuzzy_hashes.append({
             "algorithm": "ssdeep",
             "hash": fuzzy_hash
@@ -136,16 +199,30 @@ def generate_ossa_file(package, version, arch, output_dir):
                 "sha256": compute_sha256(tarball)
             },
             "swhid": swhid,
-            "folder_swhid": folder_swhid,
             "fuzzy_hash": fuzzy_hash
         })
 
     cleanup_extracted_files("./extracted_sources")
 
+    aliases = []
+    package_cleaned = ''.join([char if not char.isdigit() else ' ' for char in package])
+    words = [word for word in package_cleaned.replace('-', ' ').split() if len(word) >= 3]
+    aliases.extend(words)
+
+    license_category = "Informational"
+    reason = "Automatically generated OSSA for the package."
+    for license in licenses:
+        if any(license.startswith(c) for c in license_categories["copyleft"]):
+            license_category = "High"
+            reason = "This package contains copyleft licenses, which impose strong obligations."
+        elif any(license.startswith(c) for c in license_categories["weak_copyleft"]):
+            license_category = "Medium"
+            reason = "This package contains weak copyleft licenses, which impose moderate obligations."
+
     ossa_data = {
         "id": ossa_id,
         "version": version,
-        "severity": "Informational",
+        "severity": license_category,
         "title": f"Advisory for {package}",
         "package_name": package,
         "publisher": "Generated by OSSA Collector",
@@ -156,14 +233,14 @@ def generate_ossa_file(package, version, arch, output_dir):
                 "externalization": True
             }
         ],
-        "description": f"Automatically generated OSSA for {package}.",
+        "description": reason,
         "purls": [f"pkg:rpm/{package}@{version}?arch={arch}"],
         "regex": [f"^pkg:rpm/{package}.*"],
         "affected_versions": ["*.*", version],
         "artifacts": artifacts,
-        "licenses": [],
-        "aliases": [],
-        "references": []
+        "licenses": licenses,
+        "aliases": aliases,
+        "references": [project_url] if project_url else []
     }
 
     with open(output_path, "w") as f:
@@ -173,7 +250,8 @@ def generate_ossa_file(package, version, arch, output_dir):
 
 def main(output_dir):
     os.makedirs(output_dir, exist_ok=True)
-    packages = get_all_available_packages()
+    packages = 
+    ()
     for package, version, arch in packages:
         generate_ossa_file(package, version, arch, output_dir)
 
