@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>OSSA Schema Documentation</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">OSSA Schema Documentation</a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h1 class="mb-3">Open Source Software Advisory (OSSA) Schema</h1>
+        <p class="lead">A structured format for defining and assessing open-source package advisories.</p>
+        
+        <h2>Schema Overview</h2>
+        <p>The OSSA schema defines the structure for advisory documents, ensuring consistency and compliance.</p>
+        <table class="table table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>id</td><td>string</td><td>Unique identifier (format: OSSA-YYYYMMDD-NNNN)</td></tr>
+                <tr><td>version</td><td>string</td><td>Version of the affected package</td></tr>
+                <tr><td>severity</td><td>string (enum)</td><td>Severity level: Low, Medium, High, Informational</td></tr>
+                <tr><td>title</td><td>string</td><td>Summary of the advisory</td></tr>
+                <tr><td>package_name</td><td>string</td><td>Name of the affected package</td></tr>
+                <tr><td>purls</td><td>array</td><td>List of Package URLs (PURLs)</td></tr>
+                <tr><td>references</td><td>string | array</td><td>External references (URLs)</td></tr>
+                <tr><td>licenses</td><td>string | array</td><td>SPDX license identifier(s)</td></tr>
+                <tr><td>approvals</td><td>array</td><td>Approval status (consumption, externalization, etc.)</td></tr>
+                <tr><td>artifacts</td><td>array</td><td>Files related to the advisory with hashes</td></tr>
+            </tbody>
+        </table>
+        
+        <h2>Severity Levels</h2>
+        <div class="alert alert-danger"><strong>High:</strong> Immediate threat to functionality or business continuity.</div>
+        <div class="alert alert-warning"><strong>Medium:</strong> Signs of deprecation or support issues.</div>
+        <div class="alert alert-info"><strong>Low:</strong> Old but stable, migration suggested but not urgent.</div>
+        <div class="alert alert-secondary"><strong>Informational:</strong> Flagged for awareness, no immediate action required.</div>
+        
+        <h2>Usage</h2>
+        <p>To validate an advisory against the schema, use:</p>
+        <pre><code>python3 tool/validator.py specs/schema-1.5.json examples/OSSA-20241205-0001-ffmpeg.json</code></pre>
+        
+        <h2>License</h2>
+        <p>This specification is licensed under <strong>MIT</strong>.</p>
+    </div>
+
+    <footer class="bg-dark text-white text-center p-3 mt-4">
+        &copy; 2025 OSSA Specification by Xpertians | <a href="https://github.com/Xpertians/OpenSourceSoftwareAdvisory-spec" class="text-white">Official Schema</a>
+    </footer>
+</body>
+</html>
