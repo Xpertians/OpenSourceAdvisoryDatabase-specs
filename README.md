@@ -31,7 +31,7 @@ The schema includes the following key fields:
 * Affected Versions: Versions or version ranges impacted by the issue.
 * References: External resources or documentation links.
 
-For a complete definition, refer to [schema file](https://github.com/Xpertians/OpenSourceSoftwareAdvisory-spec/blob/main/specs/schema-1.0.json) or the [documentation](https://github.com/Xpertians/OpenSourceSoftwareAdvisory-spec/tree/main/docs).
+For a complete definition, refer to [schema file](https://github.com/Xpertians/OpenSourceSoftwareAdvisory-spec/blob/main/specs/schema-1.0.json) or the [documentation](https://github.com/Xpertians/OpenSourceSoftwareAdvisory-spec/blob/main/docs/schema.md).
 
 # License
 This project is licensed under the MIT License. See the LICENSE file for details.
