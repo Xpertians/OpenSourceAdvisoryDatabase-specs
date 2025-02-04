@@ -1,7 +1,7 @@
 # OSS Advisory Specification
-The Open Source Software Advisory (OSSA) Specification repository defines a standardized schema for OSSA files. This schema ensures consistent formatting and structure for reporting issues such as license violations, deprecated packages, or compliance concerns. The repository also includes examples demonstrating correct usage of the schema.
+The Open Source Software Advisory (OSSA) Specification repository defines a standardized schema for OSSA files, ensuring consistent formatting and structure for reporting issues like license violations, deprecated packages, or compliance concerns. The repository also includes examples that demonstrate correct usage of the schema.
 
-While the current implementation is limited, it's fully functional for the initial cases we are planning to support in the first release.
+While the current implementation is limited, it meets our requirements for the initial cases we plan to support in our first release
 
 ## Repository Contents
 * specs/: The JSON schema defining the structure of OSS advisory files.
