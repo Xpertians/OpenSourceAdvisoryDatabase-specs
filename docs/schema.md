@@ -59,7 +59,7 @@ python3 tool/validator.py specs/schema-1.5.json examples/OSSA-20241205-0001-ffmp
 
 If the advisory is valid, a success message will be displayed. Otherwise, the script will report validation errors.
 
-Creating a New Advisory
+### **Creating a New Advisory**
 * Copy an example from the examples/ folder.
 * Fill in the required fields (id, severity, purls, etc.).
 * Validate using the validator.py tool.
