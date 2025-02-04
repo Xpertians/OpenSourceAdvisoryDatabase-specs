@@ -1,35 +1,30 @@
 import json
 import jsonschema
-from jsonschema import validate
 import argparse
 
-def validate_advisory(advisory_file, schema_file):
+def load_json(file_path):
     try:
-        # Load advisory and schema from external files
-        with open(schema_file, 'r') as schema_f:
-            schema = json.load(schema_f)
-        
-        with open(advisory_file, 'r') as advisory_f:
-            advisory_json = json.load(advisory_f)
+        with open(file_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"Error loading JSON file {file_path}: {e}")
+        return None
 
-        # Validate the advisory
-        validate(instance=advisory_json, schema=schema)
-        print("Advisory is valid.")
-    except jsonschema.exceptions.ValidationError as err:
-        print(f"Validation error: {err.message}")
-    except FileNotFoundError as e:
-        print(f"File not found: {e}")
-    except json.JSONDecodeError as e:
-        print(f"JSON decode error: {e}")
+def validate_json(schema_file, data_file):
+    schema = load_json(schema_file)
+    data = load_json(data_file)
+    if schema is None or data is None:
+        return
 
-def main():
-    parser = argparse.ArgumentParser(description="Validate an OSS advisory JSON file against a schema.")
-    parser.add_argument("advisory_file", type=str, help="Path to the advisory JSON file to validate.")
-    parser.add_argument("schema_file", type=str, help="Path to the schema JSON file.")
-    
-    args = parser.parse_args()
-
-    validate_advisory(args.advisory_file, args.schema_file)
+    try:
+        jsonschema.validate(instance=data, schema=schema)
+        print(f"Validation successful: {data_file} conforms to {schema_file}")
+    except jsonschema.exceptions.ValidationError as e:
+        print(f"Validation failed: {e.message}")
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Validate an OSSA JSON file against a schema.")
+    parser.add_argument("schema_file", help="Path to the OSSA schema file (JSON Schema)")
+    parser.add_argument("data_file", help="Path to the OSSA data file to validate")
+    args = parser.parse_args()
+    validate_json(args.schema_file, args.data_file)

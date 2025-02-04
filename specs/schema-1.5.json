@@ -22,7 +22,7 @@
       "type": "array",
       "items": {
         "type": "string",
-        "pattern": "^pkg:[a-zA-Z0-9.-]+/[a-zA-Z0-9.-]+@[a-zA-Z0-9.-]+$"
+        "pattern": "^pkg:[a-zA-Z0-9.-]+(?:/[a-zA-Z0-9.-]+)*/[a-zA-Z0-9.-]+@[a-zA-Z0-9.-]+$"
       }
     },
     "regex": {
@@ -31,7 +31,7 @@
     },
     "affected_versions": {
       "type": "array",
-      "items": { "type": "string", "pattern": "(.*)|^[0-9]+(\.[0-9]+)*$" }
+      "items": { "type": "string", "pattern": "(.*)|^[0-9]+(\\.[0-9]+)*$" }
     },
     "artifacts": {
       "type": "array",
@@ -39,20 +39,19 @@
         "$ref": "#/definitions/artifact"
       }
     },
-    "licenses": { "type": "array", "items": { "type": "string" } },
+    "licenses": { "oneOf": [ { "type": "string" }, { "type": "array", "items": { "type": "string" } } ] },
     "aliases": { "type": "array", "items": { "type": "string" } },
-    "references": { "type": "array", "items": { "type": "string", "format": "uri" } }
+    "references": { "oneOf": [ { "type": "string", "format": "uri" }, { "type": "array", "items": { "type": "string", "format": "uri" } } ] }
   },
   "required": ["id", "version", "severity", "title", "package_name", "description", "purls"],
   "definitions": {
     "approval": {
       "type": "object",
-      "properties": {
-        "type": { "type": "string" },
-        "status": { "type": "boolean" }
+      "patternProperties": {
+        ".*": { "type": "boolean" }
       },
-      "required": ["type", "status"],
-      "description": "Approvals can have different types (e.g., internal, externalization, legal review) with a boolean status."
+      "minProperties": 1,
+      "description": "Approvals can contain multiple types (e.g., consumption, externalization, legal review) as boolean properties."
     },
     "artifact": {
       "type": "object",
