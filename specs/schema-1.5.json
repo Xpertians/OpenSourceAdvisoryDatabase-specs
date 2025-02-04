@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "OSSA Schema",
+  "schema_version": "1.5.0",
+  "official_url": "https://yourdomain.com/schemas/schema-1.5.json",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string", "pattern": "^OSSA-[0-9]{8}(-[0-9]+)?$" },
+    "version": { "type": "string", "pattern": "^[a-zA-Z0-9.-]+$" },
+    "severity": { "type": "string", "enum": ["Low", "Medium", "High", "Informational"] },
+    "title": { "type": "string" },
+    "package_name": { "type": "string" },
+    "publisher": { "type": "string" },
+    "last_updated": { "type": "string", "format": "date-time" },
+    "approvals": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/approval"
+      }
+    },
+    "purls": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^pkg:[a-zA-Z0-9.-]+/[a-zA-Z0-9.-]+@[a-zA-Z0-9.-]+$"
+      }
+    },
+    "regex": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^.*$" }
+    },
+    "affected_versions": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "(.*)|^[0-9]+(\.[0-9]+)*$" }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/artifact"
+      }
+    },
+    "licenses": { "type": "array", "items": { "type": "string" } },
+    "aliases": { "type": "array", "items": { "type": "string" } },
+    "references": { "type": "array", "items": { "type": "string", "format": "uri" } }
+  },
+  "required": ["id", "version", "severity", "title", "package_name", "description", "purls"],
+  "definitions": {
+    "approval": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string" },
+        "status": { "type": "boolean" }
+      },
+      "required": ["type", "status"],
+      "description": "Approvals can have different types (e.g., internal, externalization, legal review) with a boolean status."
+    },
+    "artifact": {
+      "type": "object",
+      "properties": {
+        "url": { "type": "string", "format": "uri" },
+        "hashes": {
+          "type": "object",
+          "properties": {
+            "sha1": { "type": "string" },
+            "sha256": { "type": "string" },
+            "ssdeep": { "type": "string" },
+            "swhid": { "type": "string" }
+          },
+          "required": ["sha1", "sha256", "ssdeep", "swhid"],
+          "additionalProperties": false
+        },
+        "external_hashes": {
+          "type": "object",
+          "properties": {
+            "swhid": { "type": "string" }
+          },
+          "required": ["swhid"],
+          "additionalProperties": false,
+          "description": "External archive/bundle hash. Optional."
+        }
+      },
+      "required": ["url", "hashes"]
+    }
+  }
+}
