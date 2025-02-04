@@ -1,9 +1,11 @@
 # OSS Advisory Specification
-The OSS Advisory Specification repository defines a standardized schema for Open Source Software (OSS) advisory files. This schema ensures consistent formatting and structure for reporting issues such as license violations, deprecated packages, or compliance concerns. The repository also includes examples demonstrating correct usage of the schema.
+The Open Source Software Advisory (OSSA) Specification repository defines a standardized schema for OSSA files. This schema ensures consistent formatting and structure for reporting issues such as license violations, deprecated packages, or compliance concerns. The repository also includes examples demonstrating correct usage of the schema.
+
+While the current implementation is limited, it's fully functional for the initial cases we are planning to support in the first release.
 
 ## Repository Contents
-* specs/schema.json: The JSON schema defining the structure of OSS advisory files.
-* examples/OSSA-2024-0001.json: A sample advisory file adhering to the schema for reference.
+* specs/: The JSON schema defining the structure of OSS advisory files.
+* examples/: A sample advisory file adhering to the schema for reference.
 * tools/validator.py: A simple script used to validate an advisory file against the schema.
 
 
@@ -12,7 +14,7 @@ This repository serves as a reference specification for organizations and develo
 
 ### Features of the Schema
 * Standardized Structure: Defines consistent fields for creating OSS advisory files.
-* Support for Approvals: Includes fields to track consumption and externalization statuses.
+* Support for Approvals: Includes fields for tracking consumption and externalization approvals, along with the ability to extend the schema for additional use cases.
 * Rich Metadata: Supports versioning, severity levels, and detailed descriptions of advisories.
 * Flexibility: Handles multiple affected versions, package URLs (PURLs), and regex patterns.
 
@@ -30,13 +32,6 @@ The schema includes the following key fields:
 * References: External resources or documentation links.
 
 For a complete definition, refer to schema.json or the documentation.
-
-# Contributing
-Contributions to the schema or examples are welcome! To contribute:
-
-* Fork the repository.
-* Make your changes.
-* Submit a pull request for review.
 
 # License
 This project is licensed under the MIT License. See the LICENSE file for details.
