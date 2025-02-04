@@ -1,5 +1,5 @@
-# OSS Advisory Specification
-The Open Source Software Advisory (OSSA) Specification repository defines a standardized schema for OSSA files, ensuring consistent formatting and structure for reporting issues like license violations, deprecated packages, or compliance concerns. The repository also includes examples that demonstrate correct usage of the schema.
+# Open Source Software Advisory (OSSA) - Specification
+The [Open Source Software Advisory](https://github.com/Xpertians/OpenSourceSoftwareAdvisory) (OSSA) Specification repository defines a standardized schema for [OSSA](https://github.com/Xpertians/OpenSourceSoftwareAdvisory) files, ensuring consistent formatting and structure for reporting issues like license violations, deprecated packages, or compliance concerns. The repository also includes examples that demonstrate correct usage of the schema.
 
 While the current implementation is limited, it meets our requirements for the initial cases we plan to support in our first release
 
@@ -31,7 +31,7 @@ The schema includes the following key fields:
 * Affected Versions: Versions or version ranges impacted by the issue.
 * References: External resources or documentation links.
 
-For a complete definition, refer to schema.json or the documentation.
+For a complete definition, refer to [schema file](https://github.com/Xpertians/OpenSourceSoftwareAdvisory-spec/blob/main/specs/schema-1.0.json) or the [documentation](https://github.com/Xpertians/OpenSourceSoftwareAdvisory-spec/tree/main/docs).
 
 # License
 This project is licensed under the MIT License. See the LICENSE file for details.
